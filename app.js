@@ -12,4 +12,4 @@ app.configure(function(){
 });
 //we're going to have /routes/index.js handle all of our routing
 var route = require('./routes/index.js')(app);
-app.listen(7026);
+app.listen(process.env.PORT || 7026);
