@@ -1,0 +1,81 @@
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+	io = io.connect();
+	var name;
+	var color;
+	io.emit('session_check', {});
+
+	io.on('session_result', function(data){
+		console.log(data);
+		if (data == null)
+		{
+			name = prompt("Please enter your name");
+			color = prompt("Choose a text color");
+		}
+		else
+		{
+			name = data.name;
+			color = data.color;
+		}
+
+		io.emit('got_a_new_user', {name: name, color: color});
+	});
+
+	// var name = prompt("Please enter your name");
+	// var color = prompt("Choose a text color");
+	// io.emit('got_a_new_user', {name: name, text_color: color});
+	$(document).ready(function(){
+
+		io.on('new_user', function(data){
+			$("#board").append("<p class='new_user'>"+data.name+" has joined the chatroom!</p>");
+		});
+		$('#form').on('submit', function(){
+			var message = $('#msg').val();
+			// var message = $('textarea').val();
+			io.emit('send_msg', {name: name, color: color, message: message});
+			// $('textarea').val('');
+			// $('textarea').focus();
+			$('#msg').val('');
+
+			return false;
+		});
+		$('textarea').keydown(function(e){
+			if(e.keyCode == 13)
+			{
+				$('#form').submit();
+			}
+		});
+		io.on('receive_msg', function(data){
+			$("#board").append("<p>"+data.name+": <span style='color:"+data.color+
+				"'>"+data.message+"</span></p>");
+			$("#board").scrollTop($('#board')[0].scrollHeight);
+		});
+		io.on('disconnect_user', function(data){ //alert that they have left
+			$("#board").append("<p class='disconnect_user'>"+data.name+" has left the chatroom.</p>");
+		});
+	})
+	
+</script>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Group Chat</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+</head>
+<body>
+	<div id='container'>
+		<h1>Conversation Board</h1>
+		<div id='board'>
+		</div>
+		<form id='form'>
+			<label>
+				<!-- <textarea rows='1'>Enter text here</textarea> -->
+				<input id='msg' type='text' placeholder='Enter message here'>
+			</label>
+			<!-- <input type='submit' value='Send'> -->
+		</form>
+	</div>
+</body>
+</html>
